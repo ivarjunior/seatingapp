@@ -1,0 +1,29 @@
+{
+  "name": "ivarium-seatingapp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3010",
+    "build": "next build",
+    "start": "next start --port 3010",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "next": "15.3.8",
+    "qrcode": "^1.5.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.7",
+    "@types/node": "^22.15.21",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
+    "eslint": "^9.27.0",
+    "eslint-config-next": "15.3.8",
+    "tailwindcss": "^4.1.7",
+    "typescript": "^5.8.3"
+  }
+}
