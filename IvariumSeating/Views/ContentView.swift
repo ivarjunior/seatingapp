@@ -165,6 +165,7 @@ private struct HomeView: View {
         .ignoresSafeArea(edges: .top)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
         .alert("QR-scanner", isPresented: $showsScannerMessage) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -285,18 +286,25 @@ private struct SeatingLogoView: View {
                 .minimumScaleFactor(0.65)
                 .lineLimit(1)
 
-            HStack(spacing: 16 * scale) {
+            HStack(spacing: 14 * scale) {
                 Rectangle()
                     .fill(SeatingTheme.gold.opacity(0.8))
-                    .frame(width: 86 * scale, height: 1)
+                    .frame(maxWidth: 74 * scale)
+                    .frame(height: 1)
                 Text("by ivarium")
-                    .font(.system(size: 24 * scale, weight: .light))
-                    .tracking(7 * scale)
+                    .font(.system(size: 23 * scale, weight: .light))
+                    .tracking(5 * scale)
                     .foregroundStyle(SeatingTheme.gold)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .layoutPriority(1)
                 Rectangle()
                     .fill(SeatingTheme.gold.opacity(0.8))
-                    .frame(width: 86 * scale, height: 1)
+                    .frame(maxWidth: 74 * scale)
+                    .frame(height: 1)
             }
+            .frame(maxWidth: .infinity)
         }
         .padding(.horizontal, 18)
     }
