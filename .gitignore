@@ -6,3 +6,5 @@ node_modules
 DerivedData/
 build/
 *.xcuserdata/
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/

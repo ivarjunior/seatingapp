@@ -2,12 +2,32 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var store: SeatingStore
+    @State private var selectedTab: SeatingTab = .home
 
     var body: some View {
         NavigationStack {
             Group {
                 if let plan = store.plan {
-                    GuestPickerView(plan: plan)
+                    TabView(selection: $selectedTab) {
+                        HomeView(plan: plan, selectedTab: $selectedTab)
+                            .tag(SeatingTab.home)
+                            .tabItem {
+                                Label("Home", systemImage: "house.fill")
+                            }
+
+                        TablePlanScreenView(plan: plan)
+                            .tag(SeatingTab.tablePlan)
+                            .tabItem {
+                                Label("Tafelplan", systemImage: "square.grid.3x3")
+                            }
+
+                        InfoScreenView(event: plan.event)
+                            .tag(SeatingTab.info)
+                            .tabItem {
+                                Label("Info", systemImage: "info.bubble")
+                            }
+                    }
+                    .toolbarBackground(.white, for: .tabBar)
                 } else if let errorMessage = store.errorMessage {
                     ErrorStateView(message: errorMessage)
                 } else {
@@ -24,6 +44,366 @@ struct ContentView: View {
             }
         }
         .tint(SeatingTheme.accent)
+    }
+}
+
+private enum SeatingTab {
+    case home
+    case tablePlan
+    case info
+}
+
+private struct HomeView: View {
+    let plan: SeatingPlan
+    @Binding var selectedTab: SeatingTab
+    @State private var showsScannerMessage = false
+
+    var body: some View {
+        ZStack {
+            WeddingHeroBackgroundView()
+
+            ScrollView {
+                VStack(spacing: 26) {
+                    Spacer(minLength: 78)
+
+                    SeatingLogoView()
+
+                    VStack(spacing: 8) {
+                        Text("Welkom bij onze")
+                            .font(.system(size: 34, weight: .regular, design: .serif))
+                        Text("bruiloft")
+                            .font(.system(size: 86, weight: .regular, design: .serif))
+                            .italic()
+                            .minimumScaleFactor(0.7)
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
+
+                    WeddingDividerView()
+
+                    Text("Fijn dat je er bent!\nScan de QR-code of zoek\nje naam op om te zien waar\nje plaatsneemt.")
+                        .font(.system(size: 29, weight: .regular, design: .serif))
+                        .lineSpacing(9)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+                        .padding(.horizontal, 26)
+
+                    VStack(spacing: 20) {
+                        Button {
+                            showsScannerMessage = true
+                        } label: {
+                            Label("QR-code scannen", systemImage: "qrcode.viewfinder")
+                                .font(.system(size: 22, weight: .semibold))
+                                .textCase(.uppercase)
+                                .tracking(4)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 78)
+                        }
+                        .buttonStyle(GoldCapsuleButtonStyle())
+
+                        HStack(spacing: 24) {
+                            Rectangle()
+                                .fill(SeatingTheme.gold.opacity(0.7))
+                                .frame(height: 1)
+                            Text("OF")
+                                .font(.system(size: 22, weight: .medium, design: .serif))
+                                .foregroundStyle(SeatingTheme.gold)
+                            Rectangle()
+                                .fill(SeatingTheme.gold.opacity(0.7))
+                                .frame(height: 1)
+                        }
+
+                        NavigationLink {
+                            GuestPickerView(plan: plan)
+                        } label: {
+                            Label("Zoek op naam", systemImage: "magnifyingglass")
+                                .font(.system(size: 24, weight: .semibold))
+                                .textCase(.uppercase)
+                                .tracking(4)
+                                .foregroundStyle(SeatingTheme.gold)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 78)
+                        }
+                        .buttonStyle(WhiteCapsuleButtonStyle())
+                    }
+                    .padding(.horizontal, 28)
+                    .padding(.top, 18)
+
+                    Button {
+                        selectedTab = .tablePlan
+                    } label: {
+                        HStack(spacing: 18) {
+                            Rectangle()
+                                .fill(SeatingTheme.gold.opacity(0.7))
+                                .frame(width: 95, height: 1)
+                            Text("Bekijk het tafelplan")
+                                .font(.system(size: 26, weight: .regular, design: .serif))
+                            Image(systemName: "arrow.right")
+                                .font(.title2)
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 18, height: 1)
+                        }
+                        .foregroundStyle(.white)
+                    }
+                    .padding(.top, 6)
+                    .padding(.bottom, 24)
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .ignoresSafeArea(edges: .top)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
+        .alert("QR-scanner", isPresented: $showsScannerMessage) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("De QR-scanner kan hier aan de camera-flow gekoppeld worden.")
+        }
+    }
+}
+
+private struct TablePlanScreenView: View {
+    let plan: SeatingPlan
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                EventHeaderView(event: plan.event)
+
+                FloorPlanView(tables: plan.tables, selectedTableID: nil)
+                    .frame(height: 420)
+                    .seatingCard()
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Alle tafels")
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(SeatingTheme.ink)
+
+                    ForEach(plan.tables) { table in
+                        HStack {
+                            Text(table.label)
+                                .font(.headline)
+                            Spacer()
+                            Text("\(table.capacity) plaatsen")
+                                .foregroundStyle(SeatingTheme.muted)
+                        }
+                        .padding(.vertical, 10)
+                        .overlay(alignment: .bottom) {
+                            Rectangle()
+                                .fill(SeatingTheme.accentSoft.opacity(0.6))
+                                .frame(height: 1)
+                        }
+                    }
+                }
+                .seatingCard()
+            }
+            .padding()
+        }
+        .background(SeatingTheme.background.ignoresSafeArea())
+        .navigationTitle("Tafelplan")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct InfoScreenView: View {
+    let event: SeatingEvent
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                EventHeaderView(event: event)
+
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Hoe werkt het?")
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(SeatingTheme.ink)
+
+                    InfoRowView(icon: "qrcode.viewfinder", title: "Scan je QR-code", text: "Open direct jouw persoonlijke tafel en stoel.")
+                    InfoRowView(icon: "magnifyingglass", title: "Zoek op naam", text: "Geen QR-code bij de hand? Zoek je naam op in de gastenlijst.")
+                    InfoRowView(icon: "square.grid.3x3", title: "Bekijk het tafelplan", text: "Zie waar alle tafels in de zaal staan.")
+                }
+                .seatingCard()
+            }
+            .padding()
+        }
+        .background(SeatingTheme.background.ignoresSafeArea())
+        .navigationTitle("Info")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct InfoRowView: View {
+    let icon: String
+    let title: String
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: icon)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(SeatingTheme.accent)
+                .frame(width: 36, height: 36)
+                .background(SeatingTheme.accentSoft.opacity(0.5))
+                .clipShape(Circle())
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(SeatingTheme.ink)
+                Text(text)
+                    .font(.subheadline)
+                    .foregroundStyle(SeatingTheme.muted)
+            }
+        }
+    }
+}
+
+private struct SeatingLogoView: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "heart")
+                .font(.system(size: 86, weight: .ultraLight))
+                .foregroundStyle(SeatingTheme.gold)
+
+            Text("SEATINGAPP")
+                .font(.system(size: 42, weight: .light))
+                .tracking(14)
+                .foregroundStyle(.white)
+                .minimumScaleFactor(0.65)
+                .lineLimit(1)
+
+            HStack(spacing: 18) {
+                Rectangle()
+                    .fill(SeatingTheme.gold.opacity(0.8))
+                    .frame(width: 96, height: 1)
+                Text("by ivarium")
+                    .font(.system(size: 25, weight: .light))
+                    .tracking(7)
+                    .foregroundStyle(SeatingTheme.gold)
+                Rectangle()
+                    .fill(SeatingTheme.gold.opacity(0.8))
+                    .frame(width: 96, height: 1)
+            }
+        }
+        .padding(.horizontal, 18)
+    }
+}
+
+private struct WeddingDividerView: View {
+    var body: some View {
+        HStack(spacing: 22) {
+            Rectangle()
+                .fill(SeatingTheme.gold.opacity(0.8))
+                .frame(width: 130, height: 1)
+            Image(systemName: "heart.fill")
+                .font(.system(size: 28))
+                .foregroundStyle(SeatingTheme.gold)
+            Rectangle()
+                .fill(SeatingTheme.gold.opacity(0.8))
+                .frame(width: 130, height: 1)
+        }
+    }
+}
+
+private struct WeddingHeroBackgroundView: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    Color(red: 0.34, green: 0.22, blue: 0.13),
+                    Color(red: 0.20, green: 0.15, blue: 0.11),
+                    Color(red: 0.46, green: 0.34, blue: 0.22)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            VStack(spacing: 0) {
+                HStack(alignment: .top) {
+                    FloralColumn(alignment: .leading)
+                    Spacer()
+                    FloralColumn(alignment: .trailing)
+                }
+                Spacer()
+                ReceptionTableShape()
+                    .frame(height: 230)
+                    .opacity(0.55)
+            }
+            .blur(radius: 1.4)
+
+            LinearGradient(
+                colors: [.black.opacity(0.22), .black.opacity(0.36), .black.opacity(0.18)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+    }
+}
+
+private struct FloralColumn: View {
+    let alignment: HorizontalAlignment
+
+    var body: some View {
+        VStack(alignment: alignment, spacing: -8) {
+            ForEach(0..<5, id: \.self) { index in
+                Circle()
+                    .fill(Color.white.opacity(0.24))
+                    .frame(width: CGFloat(70 - index * 6), height: CGFloat(70 - index * 6))
+                    .overlay(Circle().stroke(SeatingTheme.gold.opacity(0.2), lineWidth: 1))
+                    .offset(x: alignment == .leading ? CGFloat(index * -8) : CGFloat(index * 8))
+            }
+        }
+        .padding(.top, 105)
+        .padding(.horizontal, -12)
+    }
+}
+
+private struct ReceptionTableShape: View {
+    var body: some View {
+        ZStack {
+            Ellipse()
+                .fill(Color.white.opacity(0.18))
+                .frame(width: 420, height: 130)
+            HStack(spacing: 18) {
+                ForEach(0..<5, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(Color.white.opacity(0.18))
+                        .frame(width: 46, height: 88)
+                }
+            }
+            .offset(y: 30)
+        }
+    }
+}
+
+private struct GoldCapsuleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(.white)
+            .background(
+                LinearGradient(
+                    colors: [
+                        SeatingTheme.gold.opacity(configuration.isPressed ? 0.82 : 1),
+                        Color(red: 0.91, green: 0.68, blue: 0.40).opacity(configuration.isPressed ? 0.82 : 1)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .clipShape(Capsule())
+            .shadow(color: .black.opacity(0.18), radius: 16, y: 10)
+    }
+}
+
+private struct WhiteCapsuleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(Color.white.opacity(configuration.isPressed ? 0.88 : 0.98))
+            .clipShape(Capsule())
+            .shadow(color: .black.opacity(0.18), radius: 16, y: 10)
     }
 }
 
@@ -182,7 +562,7 @@ private struct GuestRowView: View {
 
 private struct FloorPlanView: View {
     let tables: [SeatingTable]
-    let selectedTableID: String
+    let selectedTableID: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
