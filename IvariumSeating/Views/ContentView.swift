@@ -59,56 +59,65 @@ private struct HomeView: View {
     @State private var showsScannerMessage = false
 
     var body: some View {
-        ZStack {
-            WeddingHeroBackgroundView()
+        GeometryReader { proxy in
+            let height = proxy.size.height
+            let scale = min(max(height / 760, 0.74), 1.0)
 
-            ScrollView {
-                VStack(spacing: 26) {
-                    Spacer(minLength: 78)
+            ZStack {
+                WeddingHeroBackgroundView()
 
-                    SeatingLogoView()
+                VStack(spacing: 0) {
+                    Spacer(minLength: max(14, 48 * scale))
 
-                    VStack(spacing: 8) {
+                    SeatingLogoView(scale: scale)
+
+                    Spacer(minLength: max(12, 24 * scale))
+
+                    VStack(spacing: 5 * scale) {
                         Text("Welkom bij onze")
-                            .font(.system(size: 34, weight: .regular, design: .serif))
+                            .font(.system(size: 34 * scale, weight: .regular, design: .serif))
                         Text("bruiloft")
-                            .font(.system(size: 86, weight: .regular, design: .serif))
+                            .font(.system(size: 84 * scale, weight: .regular, design: .serif))
                             .italic()
-                            .minimumScaleFactor(0.7)
+                            .minimumScaleFactor(0.65)
                             .lineLimit(1)
                     }
                     .foregroundStyle(.white)
                     .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
 
-                    WeddingDividerView()
+                    WeddingDividerView(scale: scale)
+                        .padding(.top, 18 * scale)
 
                     Text("Fijn dat je er bent!\nScan de QR-code of zoek\nje naam op om te zien waar\nje plaatsneemt.")
-                        .font(.system(size: 29, weight: .regular, design: .serif))
-                        .lineSpacing(9)
+                        .font(.system(size: 28 * scale, weight: .regular, design: .serif))
+                        .lineSpacing(7 * scale)
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                         .padding(.horizontal, 26)
+                        .padding(.top, 22 * scale)
 
-                    VStack(spacing: 20) {
+                    Spacer(minLength: max(12, 22 * scale))
+
+                    VStack(spacing: 16 * scale) {
                         Button {
                             showsScannerMessage = true
                         } label: {
                             Label("QR-code scannen", systemImage: "qrcode.viewfinder")
-                                .font(.system(size: 22, weight: .semibold))
+                                .font(.system(size: 21 * scale, weight: .semibold))
                                 .textCase(.uppercase)
-                                .tracking(4)
+                                .tracking(4 * scale)
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 78)
+                                .frame(height: 72 * scale)
                         }
                         .buttonStyle(GoldCapsuleButtonStyle())
 
-                        HStack(spacing: 24) {
+                        HStack(spacing: 22 * scale) {
                             Rectangle()
                                 .fill(SeatingTheme.gold.opacity(0.7))
                                 .frame(height: 1)
                             Text("OF")
-                                .font(.system(size: 22, weight: .medium, design: .serif))
+                                .font(.system(size: 21 * scale, weight: .medium, design: .serif))
                                 .foregroundStyle(SeatingTheme.gold)
                             Rectangle()
                                 .fill(SeatingTheme.gold.opacity(0.7))
@@ -119,41 +128,40 @@ private struct HomeView: View {
                             GuestPickerView(plan: plan)
                         } label: {
                             Label("Zoek op naam", systemImage: "magnifyingglass")
-                                .font(.system(size: 24, weight: .semibold))
+                                .font(.system(size: 23 * scale, weight: .semibold))
                                 .textCase(.uppercase)
-                                .tracking(4)
+                                .tracking(4 * scale)
                                 .foregroundStyle(SeatingTheme.gold)
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 78)
+                                .frame(height: 72 * scale)
                         }
                         .buttonStyle(WhiteCapsuleButtonStyle())
                     }
                     .padding(.horizontal, 28)
-                    .padding(.top, 18)
+
+                    Spacer(minLength: max(10, 20 * scale))
 
                     Button {
                         selectedTab = .tablePlan
                     } label: {
-                        HStack(spacing: 18) {
+                        HStack(spacing: 16 * scale) {
                             Rectangle()
                                 .fill(SeatingTheme.gold.opacity(0.7))
-                                .frame(width: 95, height: 1)
+                                .frame(width: 86 * scale, height: 1)
                             Text("Bekijk het tafelplan")
-                                .font(.system(size: 26, weight: .regular, design: .serif))
+                                .font(.system(size: 25 * scale, weight: .regular, design: .serif))
                             Image(systemName: "arrow.right")
-                                .font(.title2)
-                            Rectangle()
-                                .fill(Color.clear)
-                                .frame(width: 18, height: 1)
+                                .font(.system(size: 21 * scale))
                         }
                         .foregroundStyle(.white)
                     }
-                    .padding(.top, 6)
-                    .padding(.bottom, 24)
+
+                    Spacer(minLength: max(10, 22 * scale))
                 }
-                .frame(maxWidth: .infinity)
+                .frame(width: proxy.size.width, height: proxy.size.height)
             }
         }
+        .clipped()
         .ignoresSafeArea(edges: .top)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
@@ -262,30 +270,32 @@ private struct InfoRowView: View {
 }
 
 private struct SeatingLogoView: View {
+    let scale: CGFloat
+
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 11 * scale) {
             Image(systemName: "heart")
-                .font(.system(size: 86, weight: .ultraLight))
+                .font(.system(size: 82 * scale, weight: .ultraLight))
                 .foregroundStyle(SeatingTheme.gold)
 
             Text("SEATINGAPP")
-                .font(.system(size: 42, weight: .light))
-                .tracking(14)
+                .font(.system(size: 41 * scale, weight: .light))
+                .tracking(13 * scale)
                 .foregroundStyle(.white)
                 .minimumScaleFactor(0.65)
                 .lineLimit(1)
 
-            HStack(spacing: 18) {
+            HStack(spacing: 16 * scale) {
                 Rectangle()
                     .fill(SeatingTheme.gold.opacity(0.8))
-                    .frame(width: 96, height: 1)
+                    .frame(width: 86 * scale, height: 1)
                 Text("by ivarium")
-                    .font(.system(size: 25, weight: .light))
-                    .tracking(7)
+                    .font(.system(size: 24 * scale, weight: .light))
+                    .tracking(7 * scale)
                     .foregroundStyle(SeatingTheme.gold)
                 Rectangle()
                     .fill(SeatingTheme.gold.opacity(0.8))
-                    .frame(width: 96, height: 1)
+                    .frame(width: 86 * scale, height: 1)
             }
         }
         .padding(.horizontal, 18)
@@ -293,17 +303,19 @@ private struct SeatingLogoView: View {
 }
 
 private struct WeddingDividerView: View {
+    let scale: CGFloat
+
     var body: some View {
-        HStack(spacing: 22) {
+        HStack(spacing: 20 * scale) {
             Rectangle()
                 .fill(SeatingTheme.gold.opacity(0.8))
-                .frame(width: 130, height: 1)
+                .frame(width: 118 * scale, height: 1)
             Image(systemName: "heart.fill")
-                .font(.system(size: 28))
+                .font(.system(size: 27 * scale))
                 .foregroundStyle(SeatingTheme.gold)
             Rectangle()
                 .fill(SeatingTheme.gold.opacity(0.8))
-                .frame(width: 130, height: 1)
+                .frame(width: 118 * scale, height: 1)
         }
     }
 }
