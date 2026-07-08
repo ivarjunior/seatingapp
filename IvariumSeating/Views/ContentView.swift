@@ -1,15 +1,23 @@
+import AVFoundation
 import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var store: SeatingStore
     @State private var selectedTab: SeatingTab = .home
+    @State private var path: [String] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if let plan = store.plan {
                     TabView(selection: $selectedTab) {
-                        HomeView(plan: plan, selectedTab: $selectedTab)
+                        HomeView(
+                            plan: plan,
+                            selectedTab: $selectedTab,
+                            onScannedGuest: { guestID in
+                                path.append(guestID)
+                            }
+                        )
                             .tag(SeatingTab.home)
                             .tabItem {
                                 Label("Home", systemImage: "house.fill")
@@ -56,7 +64,9 @@ private enum SeatingTab {
 private struct HomeView: View {
     let plan: SeatingPlan
     @Binding var selectedTab: SeatingTab
-    @State private var showsScannerMessage = false
+    let onScannedGuest: (String) -> Void
+    @State private var showsScanner = false
+    @State private var scannerError: String?
 
     var body: some View {
         GeometryReader { proxy in
@@ -103,7 +113,7 @@ private struct HomeView: View {
 
                     VStack(spacing: 18 * scale) {
                         Button {
-                            showsScannerMessage = true
+                            showsScanner = true
                         } label: {
                             Label("QR-code scannen", systemImage: "qrcode.viewfinder")
                                 .font(.system(size: 19 * scale, weight: .semibold))
@@ -168,12 +178,241 @@ private struct HomeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
-        .alert("QR-scanner", isPresented: $showsScannerMessage) {
+        .sheet(isPresented: $showsScanner) {
+            QRScannerSheet(plan: plan) { guestID in
+                showsScanner = false
+                onScannedGuest(guestID)
+            } onInvalidCode: { message in
+                showsScanner = false
+                scannerError = message
+            }
+        }
+        .alert("QR-code niet herkend", isPresented: Binding(
+            get: { scannerError != nil },
+            set: { if !$0 { scannerError = nil } }
+        )) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text("De QR-scanner kan hier aan de camera-flow gekoppeld worden.")
+            Text(scannerError ?? "Probeer opnieuw of zoek op naam.")
         }
     }
+}
+
+private struct QRScannerSheet: View {
+    let plan: SeatingPlan
+    let onGuestID: (String) -> Void
+    let onInvalidCode: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var cameraError: String?
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                QRCodeScannerView { code in
+                    if let guestID = guestID(from: code, in: plan) {
+                        onGuestID(guestID)
+                    } else {
+                        onInvalidCode("Deze QR-code hoort niet bij een gast in deze seatinglijst.")
+                    }
+                } onError: { message in
+                    cameraError = message
+                }
+                .ignoresSafeArea()
+
+                VStack {
+                    Spacer()
+                    VStack(spacing: 12) {
+                        Image(systemName: "qrcode.viewfinder")
+                            .font(.system(size: 54, weight: .light))
+                        Text("Richt je camera op de QR-code")
+                            .font(.headline)
+                        Text("De app opent automatisch jouw tafel en stoel.")
+                            .font(.subheadline)
+                            .multilineTextAlignment(.center)
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(24)
+                    .frame(maxWidth: .infinity)
+                    .background(.black.opacity(0.45))
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    .padding(24)
+                }
+
+                if let cameraError {
+                    VStack(spacing: 14) {
+                        Image(systemName: "camera.fill")
+                            .font(.largeTitle)
+                            .foregroundStyle(SeatingTheme.accent)
+                        Text(cameraError)
+                            .font(.headline)
+                            .multilineTextAlignment(.center)
+                        Button("Sluiten") {
+                            dismiss()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(SeatingTheme.accent)
+                    }
+                    .padding(24)
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    .padding(24)
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Sluiten") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct QRCodeScannerView: UIViewControllerRepresentable {
+    let onCodeScanned: (String) -> Void
+    let onError: (String) -> Void
+
+    func makeUIViewController(context: Context) -> QRScannerViewController {
+        let controller = QRScannerViewController()
+        controller.onCodeScanned = onCodeScanned
+        controller.onError = onError
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: QRScannerViewController, context: Context) { }
+}
+
+private final class QRScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
+    var onCodeScanned: ((String) -> Void)?
+    var onError: ((String) -> Void)?
+    private let session = AVCaptureSession()
+    private var previewLayer: AVCaptureVideoPreviewLayer?
+    private var didScanCode = false
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        configureCamera()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        previewLayer?.frame = view.bounds
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        stopSession()
+    }
+
+    private func configureCamera() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            setupSession()
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                DispatchQueue.main.async {
+                    granted ? self?.setupSession() : self?.onError?("Camera-toegang is nodig om QR-codes te scannen.")
+                }
+            }
+        case .denied, .restricted:
+            onError?("Camera-toegang staat uit. Zet camera-toegang aan in Instellingen om QR-codes te scannen.")
+        @unknown default:
+            onError?("De camera kon niet worden geopend.")
+        }
+    }
+
+    private func setupSession() {
+        guard let camera = AVCaptureDevice.default(for: .video) else {
+            onError?("Deze simulator of dit apparaat heeft geen beschikbare camera.")
+            return
+        }
+
+        do {
+            let input = try AVCaptureDeviceInput(device: camera)
+            guard session.canAddInput(input) else {
+                onError?("De camera kon niet aan de scanner worden gekoppeld.")
+                return
+            }
+            session.addInput(input)
+
+            let metadataOutput = AVCaptureMetadataOutput()
+            guard session.canAddOutput(metadataOutput) else {
+                onError?("QR-code herkenning kon niet worden gestart.")
+                return
+            }
+            session.addOutput(metadataOutput)
+            metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
+            metadataOutput.metadataObjectTypes = [.qr]
+
+            let previewLayer = AVCaptureVideoPreviewLayer(session: session)
+            previewLayer.videoGravity = .resizeAspectFill
+            previewLayer.frame = view.bounds
+            view.layer.insertSublayer(previewLayer, at: 0)
+            self.previewLayer = previewLayer
+
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                self?.session.startRunning()
+            }
+        } catch {
+            onError?("De camera kon niet worden geopend.")
+        }
+    }
+
+    private func stopSession() {
+        guard session.isRunning else { return }
+        DispatchQueue.global(qos: .userInitiated).async { [session] in
+            session.stopRunning()
+        }
+    }
+
+    func metadataOutput(
+        _ output: AVCaptureMetadataOutput,
+        didOutput metadataObjects: [AVMetadataObject],
+        from connection: AVCaptureConnection
+    ) {
+        guard !didScanCode,
+              let metadata = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
+              let value = metadata.stringValue else {
+            return
+        }
+
+        didScanCode = true
+        stopSession()
+        onCodeScanned?(value)
+    }
+}
+
+private func guestID(from code: String, in plan: SeatingPlan) -> String? {
+    let trimmedCode = code.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    if plan.guests.contains(where: { $0.id == trimmedCode }) {
+        return trimmedCode
+    }
+
+    if let url = URL(string: trimmedCode) {
+        let pathParts = url.pathComponents.filter { $0 != "/" }
+        if let placeIndex = pathParts.firstIndex(of: "plek"),
+           pathParts.indices.contains(pathParts.index(after: placeIndex)) {
+            let candidate = pathParts[pathParts.index(after: placeIndex)]
+            if plan.guests.contains(where: { $0.id == candidate }) {
+                return candidate
+            }
+        }
+
+        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+            for key in ["guestId", "guest", "id"] {
+                if let candidate = components.queryItems?.first(where: { $0.name == key })?.value,
+                   plan.guests.contains(where: { $0.id == candidate }) {
+                    return candidate
+                }
+            }
+        }
+    }
+
+    return nil
 }
 
 private struct TablePlanScreenView: View {
