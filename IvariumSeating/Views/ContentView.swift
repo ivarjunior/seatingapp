@@ -65,6 +65,8 @@ private struct HomeView: View {
 
             ZStack {
                 WeddingHeroBackgroundView()
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     Spacer(minLength: 42 * scale)
@@ -162,7 +164,7 @@ private struct HomeView: View {
             }
         }
         .clipped()
-        .ignoresSafeArea(edges: .top)
+        .ignoresSafeArea()
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
