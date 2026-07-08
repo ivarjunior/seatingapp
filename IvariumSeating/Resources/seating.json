@@ -1,0 +1,29 @@
+{
+  "event": {
+    "title": "Bruiloft Anna & Mark",
+    "subtitle": "Welkom - zoek hier je tafel",
+    "date": "2026-09-12",
+    "venue": "Landgoed De Horst"
+  },
+  "tables": [
+    {"id": "table-1", "label": "Tafel 1", "positionX": 22, "positionY": 28, "capacity": 8},
+    {"id": "table-2", "label": "Tafel 2", "positionX": 50, "positionY": 24, "capacity": 8},
+    {"id": "table-3", "label": "Tafel 3", "positionX": 78, "positionY": 28, "capacity": 8},
+    {"id": "table-4", "label": "Tafel 4", "positionX": 18, "positionY": 58, "capacity": 10},
+    {"id": "table-5", "label": "Tafel 5", "positionX": 50, "positionY": 62, "capacity": 10},
+    {"id": "table-6", "label": "Tafel 6", "positionX": 82, "positionY": 58, "capacity": 8},
+    {"id": "table-head", "label": "Hoofdtafel", "positionX": 50, "positionY": 88, "capacity": 6}
+  ],
+  "guests": [
+    {"id": "g1", "name": "Anna Jansen", "tableId": "table-head", "seatIndex": 0},
+    {"id": "g2", "name": "Mark de Vries", "tableId": "table-head", "seatIndex": 1},
+    {"id": "g3", "name": "Sophie Bakker", "tableId": "table-1", "seatIndex": 2},
+    {"id": "g4", "name": "Lucas Vermeer", "tableId": "table-1", "seatIndex": 5},
+    {"id": "g5", "name": "Emma Smit", "tableId": "table-2", "seatIndex": 0},
+    {"id": "g6", "name": "Noah van Dijk", "tableId": "table-2", "seatIndex": 4},
+    {"id": "g7", "name": "Mila Peters", "tableId": "table-3", "seatIndex": 1},
+    {"id": "g8", "name": "Daan Mulder", "tableId": "table-4", "seatIndex": 3},
+    {"id": "g9", "name": "Eva de Boer", "tableId": "table-5", "seatIndex": 6},
+    {"id": "g10", "name": "Finn Visser", "tableId": "table-6", "seatIndex": 2}
+  ]
+}

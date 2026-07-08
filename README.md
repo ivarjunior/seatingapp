@@ -58,6 +58,16 @@ npm run dev
 
 Open [http://localhost:3010](http://localhost:3010).
 
+## Native iOS app
+
+De native SwiftUI/Xcode-app staat in `IvariumSeating.xcodeproj`.
+
+```bash
+open IvariumSeating.xcodeproj
+```
+
+Kies in Xcode de scheme `IvariumSeating` en run op een iPhone- of iPad-simulator. De iOS-app gebruikt de gebundelde seating-data in `IvariumSeating/Resources/seating.json`.
+
 ## QR op telefoons (zelfde netwerk)
 
 ```env
