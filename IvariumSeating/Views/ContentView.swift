@@ -61,23 +61,23 @@ private struct HomeView: View {
     var body: some View {
         GeometryReader { proxy in
             let height = proxy.size.height
-            let scale = min(max(height / 760, 0.74), 1.0)
+            let scale = min(max(height / 780, 0.72), 1.0)
 
             ZStack {
                 WeddingHeroBackgroundView()
 
                 VStack(spacing: 0) {
-                    Spacer(minLength: max(14, 48 * scale))
+                    Spacer(minLength: 42 * scale)
 
                     SeatingLogoView(scale: scale)
 
-                    Spacer(minLength: max(12, 24 * scale))
+                    Spacer(minLength: 24 * scale)
 
                     VStack(spacing: 5 * scale) {
                         Text("Welkom bij onze")
                             .font(.system(size: 34 * scale, weight: .regular, design: .serif))
                         Text("bruiloft")
-                            .font(.system(size: 84 * scale, weight: .regular, design: .serif))
+                            .font(.system(size: 92 * scale, weight: .regular, design: .serif))
                             .italic()
                             .minimumScaleFactor(0.65)
                             .lineLimit(1)
@@ -90,7 +90,7 @@ private struct HomeView: View {
 
                     Text("Fijn dat je er bent!\nScan de QR-code of zoek\nje naam op om te zien waar\nje plaatsneemt.")
                         .font(.system(size: 28 * scale, weight: .regular, design: .serif))
-                        .lineSpacing(7 * scale)
+                        .lineSpacing(8 * scale)
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
@@ -99,16 +99,16 @@ private struct HomeView: View {
 
                     Spacer(minLength: max(12, 22 * scale))
 
-                    VStack(spacing: 16 * scale) {
+                    VStack(spacing: 18 * scale) {
                         Button {
                             showsScannerMessage = true
                         } label: {
                             Label("QR-code scannen", systemImage: "qrcode.viewfinder")
-                                .font(.system(size: 21 * scale, weight: .semibold))
+                                .font(.system(size: 22 * scale, weight: .semibold))
                                 .textCase(.uppercase)
                                 .tracking(4 * scale)
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 72 * scale)
+                                .frame(height: 76 * scale)
                         }
                         .buttonStyle(GoldCapsuleButtonStyle())
 
@@ -128,12 +128,12 @@ private struct HomeView: View {
                             GuestPickerView(plan: plan)
                         } label: {
                             Label("Zoek op naam", systemImage: "magnifyingglass")
-                                .font(.system(size: 23 * scale, weight: .semibold))
+                                .font(.system(size: 24 * scale, weight: .semibold))
                                 .textCase(.uppercase)
                                 .tracking(4 * scale)
                                 .foregroundStyle(SeatingTheme.gold)
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 72 * scale)
+                                .frame(height: 76 * scale)
                         }
                         .buttonStyle(WhiteCapsuleButtonStyle())
                     }
@@ -323,70 +323,24 @@ private struct WeddingDividerView: View {
 private struct WeddingHeroBackgroundView: View {
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.34, green: 0.22, blue: 0.13),
-                    Color(red: 0.20, green: 0.15, blue: 0.11),
-                    Color(red: 0.46, green: 0.34, blue: 0.22)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
-            VStack(spacing: 0) {
-                HStack(alignment: .top) {
-                    FloralColumn(alignment: .leading)
-                    Spacer()
-                    FloralColumn(alignment: .trailing)
-                }
-                Spacer()
-                ReceptionTableShape()
-                    .frame(height: 230)
-                    .opacity(0.55)
-            }
-            .blur(radius: 1.4)
+            Image("WeddingHeroBackground")
+                .resizable()
+                .scaledToFill()
+                .saturation(0.92)
+                .blur(radius: 0.9)
 
             LinearGradient(
-                colors: [.black.opacity(0.22), .black.opacity(0.36), .black.opacity(0.18)],
+                colors: [.black.opacity(0.24), .black.opacity(0.42), .black.opacity(0.34)],
                 startPoint: .top,
                 endPoint: .bottom
             )
-        }
-    }
-}
 
-private struct FloralColumn: View {
-    let alignment: HorizontalAlignment
-
-    var body: some View {
-        VStack(alignment: alignment, spacing: -8) {
-            ForEach(0..<5, id: \.self) { index in
-                Circle()
-                    .fill(Color.white.opacity(0.24))
-                    .frame(width: CGFloat(70 - index * 6), height: CGFloat(70 - index * 6))
-                    .overlay(Circle().stroke(SeatingTheme.gold.opacity(0.2), lineWidth: 1))
-                    .offset(x: alignment == .leading ? CGFloat(index * -8) : CGFloat(index * 8))
-            }
-        }
-        .padding(.top, 105)
-        .padding(.horizontal, -12)
-    }
-}
-
-private struct ReceptionTableShape: View {
-    var body: some View {
-        ZStack {
-            Ellipse()
-                .fill(Color.white.opacity(0.18))
-                .frame(width: 420, height: 130)
-            HStack(spacing: 18) {
-                ForEach(0..<5, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(Color.white.opacity(0.18))
-                        .frame(width: 46, height: 88)
-                }
-            }
-            .offset(y: 30)
+            RadialGradient(
+                colors: [.clear, .black.opacity(0.26)],
+                center: .center,
+                startRadius: 120,
+                endRadius: 520
+            )
         }
     }
 }
