@@ -69,7 +69,7 @@ private struct HomeView: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    Spacer(minLength: 42 * scale)
+                    Spacer(minLength: 46 * scale)
 
                     SeatingLogoView(scale: scale)
 
@@ -77,9 +77,9 @@ private struct HomeView: View {
 
                     VStack(spacing: 5 * scale) {
                         Text("Welkom bij onze")
-                            .font(.system(size: 34 * scale, weight: .regular, design: .serif))
+                            .font(.system(size: 30 * scale, weight: .regular, design: .serif))
                         Text("bruiloft")
-                            .font(.system(size: 92 * scale, weight: .regular, design: .serif))
+                            .font(.system(size: 78 * scale, weight: .regular, design: .serif))
                             .italic()
                             .minimumScaleFactor(0.65)
                             .lineLimit(1)
@@ -91,8 +91,8 @@ private struct HomeView: View {
                         .padding(.top, 18 * scale)
 
                     Text("Fijn dat je er bent!\nScan de QR-code of zoek\nje naam op om te zien waar\nje plaatsneemt.")
-                        .font(.system(size: 28 * scale, weight: .regular, design: .serif))
-                        .lineSpacing(8 * scale)
+                        .font(.system(size: 24 * scale, weight: .regular, design: .serif))
+                        .lineSpacing(7 * scale)
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
@@ -106,9 +106,9 @@ private struct HomeView: View {
                             showsScannerMessage = true
                         } label: {
                             Label("QR-code scannen", systemImage: "qrcode.viewfinder")
-                                .font(.system(size: 22 * scale, weight: .semibold))
+                                .font(.system(size: 19 * scale, weight: .semibold))
                                 .textCase(.uppercase)
-                                .tracking(4 * scale)
+                                .tracking(3.4 * scale)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 76 * scale)
                         }
@@ -119,7 +119,7 @@ private struct HomeView: View {
                                 .fill(SeatingTheme.gold.opacity(0.7))
                                 .frame(height: 1)
                             Text("OF")
-                                .font(.system(size: 21 * scale, weight: .medium, design: .serif))
+                                .font(.system(size: 18 * scale, weight: .medium, design: .serif))
                                 .foregroundStyle(SeatingTheme.gold)
                             Rectangle()
                                 .fill(SeatingTheme.gold.opacity(0.7))
@@ -130,9 +130,9 @@ private struct HomeView: View {
                             GuestPickerView(plan: plan)
                         } label: {
                             Label("Zoek op naam", systemImage: "magnifyingglass")
-                                .font(.system(size: 24 * scale, weight: .semibold))
+                                .font(.system(size: 20 * scale, weight: .semibold))
                                 .textCase(.uppercase)
-                                .tracking(4 * scale)
+                                .tracking(3.4 * scale)
                                 .foregroundStyle(SeatingTheme.gold)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 76 * scale)
@@ -151,7 +151,7 @@ private struct HomeView: View {
                                 .fill(SeatingTheme.gold.opacity(0.7))
                                 .frame(width: 86 * scale, height: 1)
                             Text("Bekijk het tafelplan")
-                                .font(.system(size: 25 * scale, weight: .regular, design: .serif))
+                                .font(.system(size: 22 * scale, weight: .regular, design: .serif))
                             Image(systemName: "arrow.right")
                                 .font(.system(size: 21 * scale))
                         }
@@ -278,12 +278,12 @@ private struct SeatingLogoView: View {
     var body: some View {
         VStack(spacing: 11 * scale) {
             Image(systemName: "heart")
-                .font(.system(size: 82 * scale, weight: .ultraLight))
+                .font(.system(size: 72 * scale, weight: .ultraLight))
                 .foregroundStyle(SeatingTheme.gold)
 
             Text("SEATINGAPP")
-                .font(.system(size: 41 * scale, weight: .light))
-                .tracking(13 * scale)
+                .font(.system(size: 36 * scale, weight: .light))
+                .tracking(11 * scale)
                 .foregroundStyle(.white)
                 .minimumScaleFactor(0.65)
                 .lineLimit(1)
@@ -294,8 +294,8 @@ private struct SeatingLogoView: View {
                     .frame(maxWidth: 74 * scale)
                     .frame(height: 1)
                 Text("by ivarium")
-                    .font(.system(size: 23 * scale, weight: .light))
-                    .tracking(5 * scale)
+                    .font(.system(size: 21 * scale, weight: .light))
+                    .tracking(4.5 * scale)
                     .foregroundStyle(SeatingTheme.gold)
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
