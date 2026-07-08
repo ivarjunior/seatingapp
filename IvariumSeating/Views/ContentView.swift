@@ -137,7 +137,7 @@ private struct HomeView: View {
                         }
 
                         NavigationLink {
-                            GuestPickerView(plan: plan)
+                            GuestPickerView(plan: plan, onFoundGuest: onScannedGuest)
                         } label: {
                             Label("Zoek op naam", systemImage: "magnifyingglass")
                                 .font(.system(size: 20 * scale, weight: .semibold))
@@ -623,8 +623,11 @@ private struct WhiteCapsuleButtonStyle: ButtonStyle {
 }
 
 private struct GuestPickerView: View {
-    @EnvironmentObject private var store: SeatingStore
     let plan: SeatingPlan
+    let onFoundGuest: (String) -> Void
+    @State private var nameQuery = ""
+    @State private var errorMessage: String?
+    @FocusState private var isNameFieldFocused: Bool
 
     var body: some View {
         ScrollView {
@@ -636,9 +639,16 @@ private struct GuestPickerView: View {
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(SeatingTheme.ink)
 
-                    TextField("Typ je naam", text: $store.searchText)
+                    Text("Vul je volledige naam in. Andere gasten worden niet getoond.")
+                        .font(.subheadline)
+                        .foregroundStyle(SeatingTheme.muted)
+
+                    TextField("Bijvoorbeeld: Anna Jansen", text: $nameQuery)
                         .textInputAutocapitalization(.words)
                         .autocorrectionDisabled()
+                        .submitLabel(.search)
+                        .focused($isNameFieldFocused)
+                        .onSubmit(findGuest)
                         .padding(16)
                         .background(Color.white)
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -647,14 +657,21 @@ private struct GuestPickerView: View {
                                 .stroke(SeatingTheme.accentSoft, lineWidth: 1)
                         )
 
-                    LazyVStack(spacing: 10) {
-                        ForEach(store.filteredGuests) { guest in
-                            NavigationLink(value: guest.id) {
-                                GuestRowView(guest: guest, table: store.table(for: guest))
-                            }
-                            .buttonStyle(.plain)
-                        }
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.red)
                     }
+
+                    Button(action: findGuest) {
+                        Label("Bekijk mijn plek", systemImage: "arrow.right")
+                            .font(.headline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                    }
+                    .buttonStyle(GoldCapsuleButtonStyle())
+                    .disabled(nameQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .opacity(nameQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.55 : 1)
                 }
                 .seatingCard()
             }
@@ -662,6 +679,25 @@ private struct GuestPickerView: View {
         }
         .navigationTitle("Ivarium Seating")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            isNameFieldFocused = true
+        }
+    }
+
+    private func findGuest() {
+        let normalizedQuery = normalizedName(nameQuery)
+        guard !normalizedQuery.isEmpty else {
+            errorMessage = "Vul je naam in."
+            return
+        }
+
+        if let guest = plan.guests.first(where: { normalizedName($0.name) == normalizedQuery }) {
+            errorMessage = nil
+            isNameFieldFocused = false
+            onFoundGuest(guest.id)
+        } else {
+            errorMessage = "We konden deze naam niet vinden. Controleer de spelling of scan je QR-code."
+        }
     }
 }
 
@@ -889,6 +925,13 @@ private struct ErrorStateView: View {
 private func initials(for name: String) -> String {
     let parts = name.split(separator: " ")
     return parts.prefix(2).compactMap(\.first).map(String.init).joined().uppercased()
+}
+
+private func normalizedName(_ name: String) -> String {
+    name
+        .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+        .split(whereSeparator: \.isWhitespace)
+        .joined(separator: " ")
 }
 
 private func seatPoint(index: Int, capacity: Int, size: CGSize) -> CGPoint {
